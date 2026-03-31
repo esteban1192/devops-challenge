@@ -9,7 +9,7 @@ data:
   USER_SERVICE_URL: "http://user-service:3001"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
-  REDIS_PASSWORD: "supersecret"  # BUG 8: Sensitive data in ConfigMap instead of Secret
+  REDIS_PASSWORD: "supersecret"
   LOG_LEVEL: "info"
   NODE_ENV: "production"
-  DATABASE_URL: "postgresql://admin:p4ssw0rd@db:5432/app"  # BUG 8: Credentials in plain text ConfigMap
+  DATABASE_URL: "postgresql://admin:p4ssw0rd@db:5432/app"

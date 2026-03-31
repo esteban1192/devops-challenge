@@ -18,7 +18,7 @@ spec:
           image: redis:7-alpine
           ports:
             - containerPort: 6379
-          command: ["redis-server", "--requirepass", "supersecret"]  # BUG 7: Password set but app doesn't send auth
+          command: ["redis-server", "--requirepass", "supersecret"]
           resources:
             requests:
               cpu: "50m"

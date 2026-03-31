@@ -22,7 +22,7 @@ spec:
             - name: PORT
               value: "3001"
             - name: REDIS_HOST
-              value: "redis-master"  # BUG 4: Wrong Redis hostname (should be 'redis')
+              value: "redis-master"
             - name: REDIS_PORT
               value: "6379"
           resources:
@@ -38,7 +38,7 @@ spec:
               port: 3001
             initialDelaySeconds: 3
             periodSeconds: 5
-            failureThreshold: 1  # BUG 5: Too aggressive, 1 failure = restart
+            failureThreshold: 1
           readinessProbe:
             httpGet:
               path: /health/ready
@@ -57,4 +57,4 @@ spec:
     app: user-service
   ports:
     - port: 3001
-      targetPort: 8080  # BUG 6: targetPort doesn't match containerPort
+      targetPort: 8080

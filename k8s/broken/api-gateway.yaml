@@ -11,13 +11,13 @@ spec:
   template:
     metadata:
       labels:
-        app: gateway  # BUG 1: Label doesn't match selector
+        app: gateway
     spec:
       containers:
         - name: api-gateway
           image: devops-challenge/api-gateway:latest
           ports:
-            - containerPort: 8080  # BUG 2: Wrong port (app runs on 3000)
+            - containerPort: 8080
           env:
             - name: PORT
               value: "3000"
@@ -29,7 +29,7 @@ spec:
               memory: "32Mi"
             limits:
               cpu: "50m"
-              memory: "64Mi"  # BUG 3: Memory limit too low for Node.js
+              memory: "64Mi"
           livenessProbe:
             httpGet:
               path: /health/live
