@@ -179,37 +179,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy notification
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const env = '${{ github.ref_name }}' === 'main' ? 'prod' : 'dev';
-            const deployResult = '${{ needs.deploy.result }}';
-            const testResult = '${{ needs.test.result }}';
-            const buildResult = '${{ needs.build-push.result }}';
+        run: |
+          ENV=${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+          DEPLOY="${{ needs.deploy.result }}"
+          TEST="${{ needs.test.result }}"
+          BUILD="${{ needs.build-push.result }}"
+          SHORT_SHA=${GITHUB_SHA::7}
 
-            const status = deployResult === 'success' ? '✅ Success' : '❌ Failed';
-            const emoji = deployResult === 'success' ? '🚀' : '🔥';
+          if [ "$DEPLOY" = "success" ]; then
+            EMOJI="🚀"; STATUS="✅ Success"
+          else
+            EMOJI="🔥"; STATUS="❌ Failed"
+          fi
 
-            const shortSha = context.sha.substring(0, 7);
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## ${EMOJI} Deploy ${STATUS}
 
-            const body = [
-              `## ${emoji} Deploy ${status}`,
-              '',
-              `| Step | Result |`,
-              `|------|--------|`,
-              `| Tests | ${testResult} |`,
-              `| Build & Push | ${buildResult} |`,
-              `| Deploy (${env}) | ${deployResult} |`,
-              '',
-              `**Environment:** ${env}`,
-              `**Commit:** ${shortSha}`,
-              `**Branch:** ${context.ref}`,
-              `**Actor:** ${context.actor}`,
-            ].join('\n');
+          | Step | Result |
+          |------|--------|
+          | Tests | ${TEST} |
+          | Build & Push | ${BUILD} |
+          | Deploy (${ENV}) | ${DEPLOY} |
 
-            await github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: body,
-            });
+          **Environment:** ${ENV}
+          **Commit:** ${SHORT_SHA}
+          **Branch:** ${GITHUB_REF}
+          **Actor:** ${GITHUB_ACTOR}
+          EOF
