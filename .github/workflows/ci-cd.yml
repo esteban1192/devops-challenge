@@ -148,6 +148,7 @@ jobs:
         env:
           TF_VAR_redis_password: ${{ secrets.REDIS_PASSWORD }}
         run: |
+          chmod +x ./scripts/deploy.sh
           SHORT_SHA=${GITHUB_SHA::7}
           ./scripts/deploy.sh ${{ env.DEPLOY_ENV }} --image-tag=sha-${SHORT_SHA}
 
