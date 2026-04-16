@@ -99,26 +99,6 @@ kubectl create secret generic aws-sm-credentials \
 
 echo "--- aws-sm-credentials: done ---"
 
-# ---------- Step 2b: Create fallback redis-credentials K8s secret ----------
-# ESO will eventually sync this from AWS Secrets Manager, but pods need it NOW
-# to avoid CreateContainerConfigError on startup. Fetch directly from AWS SM.
-echo ""
-echo "--- Creating redis-credentials K8s secret (fallback) ---"
-REDIS_SECRET_NAME="devops-challenge/${ENV}/redis-password"
-REDIS_PASSWORD="$(aws secretsmanager get-secret-value \
-  --secret-id "$REDIS_SECRET_NAME" \
-  --query 'SecretString' --output text 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['password'])" 2>/dev/null || true)"
-
-if [[ -n "$REDIS_PASSWORD" ]]; then
-  kubectl create secret generic redis-credentials \
-    --namespace "$NAMESPACE" \
-    --from-literal=password="$REDIS_PASSWORD" \
-    --dry-run=client -o yaml | kubectl apply -f -
-  echo "--- redis-credentials: created from AWS SM ---"
-else
-  echo "--- redis-credentials: could not fetch from AWS SM, relying on ESO ---"
-fi
-
 # ---------- Step 3: Apply Kustomize overlay ----------
 echo ""
 echo "--- Applying Kustomize overlay: $ENV ---"
@@ -142,7 +122,7 @@ for DEPLOY in redis user-service api-gateway; do
   echo "  Waiting for $DEPLOY..."
   kubectl rollout status deployment/"$DEPLOY" \
     --namespace "$NAMESPACE" \
-    --timeout=180s
+    --timeout=120s
 done
 
 echo ""
