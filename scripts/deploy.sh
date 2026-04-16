@@ -143,9 +143,25 @@ echo "--- Waiting for deployments to roll out ---"
 
 for DEPLOY in redis user-service api-gateway; do
   echo "  Waiting for $DEPLOY..."
-  kubectl rollout status deployment/"$DEPLOY" \
+  if ! kubectl rollout status deployment/"$DEPLOY" \
     --namespace "$NAMESPACE" \
-    --timeout=120s
+    --timeout=120s; then
+    echo ""
+    echo "!!! ROLLOUT FAILED for $DEPLOY — collecting diagnostics !!!"
+    echo ""
+    echo "--- Pod status ---"
+    kubectl get pods -n "$NAMESPACE" -l app.kubernetes.io/name="$DEPLOY" -o wide
+    echo ""
+    echo "--- Pod describe ---"
+    kubectl describe pods -n "$NAMESPACE" -l app.kubernetes.io/name="$DEPLOY"
+    echo ""
+    echo "--- Pod logs ---"
+    kubectl logs -n "$NAMESPACE" -l app.kubernetes.io/name="$DEPLOY" --tail=50 || true
+    echo ""
+    echo "--- Events ---"
+    kubectl get events -n "$NAMESPACE" --sort-by='.lastTimestamp' | tail -20
+    exit 1
+  fi
 done
 
 echo ""
