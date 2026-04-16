@@ -13,8 +13,8 @@ patches:
 
 images:
   - name: devops-challenge/api-gateway
-    newName: ghcr.io/YOUR_ORG/devops-challenge/api-gateway
+    newName: ghcr.io/esteban1192/devops-challenge/api-gateway
     newTag: latest
   - name: devops-challenge/user-service
-    newName: ghcr.io/YOUR_ORG/devops-challenge/user-service
+    newName: ghcr.io/esteban1192/devops-challenge/user-service
     newTag: latest

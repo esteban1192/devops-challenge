@@ -5,6 +5,7 @@
 #   ./scripts/deploy.sh <env>                              # env = dev | prod
 #   ./scripts/deploy.sh dev --profile=devops-challenge     # use a named AWS profile
 #   ./scripts/deploy.sh dev --skip-tf                      # skip terraform (secrets already exist)
+#   ./scripts/deploy.sh dev --image-tag=sha-abc1234        # override image tag (CI sets this)
 #
 # Prerequisites:
 #   - AWS credentials configured (AWS_PROFILE or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY)
@@ -26,12 +27,14 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV="${1:-}"
 SKIP_TF=false
 AWS_PROFILE_ARG=""
+IMAGE_TAG=""
 
 # Parse flags
 for arg in "$@"; do
   case $arg in
     --skip-tf) SKIP_TF=true ;;
     --profile=*) AWS_PROFILE_ARG="${arg#--profile=}" ;;
+    --image-tag=*) IMAGE_TAG="${arg#--image-tag=}" ;;
   esac
 done
 
@@ -104,7 +107,16 @@ echo "--- aws-sm-credentials: done ---"
 # ---------- Step 3: Apply Kustomize overlay ----------
 echo ""
 echo "--- Applying Kustomize overlay: $ENV ---"
-kubectl apply -k "$K8S_OVERLAY"
+
+if [[ -n "$IMAGE_TAG" ]]; then
+  echo "  Overriding image tags to: $IMAGE_TAG"
+  # Build kustomize output, override image tags, apply
+  kubectl kustomize "$K8S_OVERLAY" \
+    | sed -E "s|(image: .+devops-challenge/(api-gateway\|user-service)):.*|\1:${IMAGE_TAG}|g" \
+    | kubectl apply -f -
+else
+  kubectl apply -k "$K8S_OVERLAY"
+fi
 echo "--- Kustomize: done ---"
 
 # ---------- Step 4: Wait for rollout ----------
